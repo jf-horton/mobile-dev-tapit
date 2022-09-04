@@ -3,10 +3,14 @@ package com.example.tapit
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.GridCells
+import androidx.compose.foundation.lazy.LazyVerticalGrid
 import androidx.compose.material.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
@@ -14,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.example.tapit.ui.theme.TapitTheme
 
 class MainActivity : ComponentActivity() {
+    @OptIn(ExperimentalFoundationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         val debugMode = false
         super.onCreate(savedInstanceState)
@@ -51,83 +56,46 @@ class MainActivity : ComponentActivity() {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .fillMaxHeight(0.7f)
-                        ) {
-                            Row(modifier = Modifier.fillMaxWidth()) {
-                                Button(modifier = Modifier
-                                    .width(182.dp)
-                                    .height(182.dp),
-                                    colors = ButtonDefaults.buttonColors(
-                                        backgroundColor = Color.Blue
-                                    ),
-                                    onClick = {
-                                        selectedColors.add(Color.Blue)
-                                        if (selectedColors == colorSequence.slice(0 until selectedColors.size)) {
-                                            if (selectedColors == colorSequence) {
-                                                level++
-                                            }
-                                        } else {
-                                            lost = true
-                                        }
-                                    },
-                                    enabled = !lost) {}
-                                Spacer(modifier = Modifier.width(18.dp))
-                                Button(modifier = Modifier
-                                    .width(182.dp)
-                                    .height(182.dp),
-                                    colors = ButtonDefaults.buttonColors(
-                                        backgroundColor = Color.Red
-                                    ),
-                                    onClick = {
-                                        selectedColors.add(Color.Red)
-                                        if (selectedColors == colorSequence.slice(0 until selectedColors.size)) {
-                                            if (selectedColors == colorSequence) {
-                                                level++
-                                            }
-                                        } else {
-                                            lost = true
-                                        } },
-                                    enabled = !lost) {}
+                                .fillMaxHeight(0.7f)) {
+                            LazyVerticalGrid(
+                                cells = GridCells.Fixed(2)
+                            ) {
+                                items(colorPalette.size) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Button(modifier = Modifier
+                                            .width(182.dp)
+                                            .height(182.dp),
+                                            colors = ButtonDefaults.buttonColors(
+                                                backgroundColor = colorPalette[it]
+                                            ),
+                                            onClick = {
+                                                selectedColors.add(colorPalette[it])
+                                                if (selectedColors == colorSequence.slice(0 until selectedColors.size)) {
+                                                    if (selectedColors == colorSequence) {
+                                                        level++
+                                                    }
+                                                } else {
+                                                    lost = true
+                                                }
+                                            },
+                                            enabled = !lost) {}
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                    }
+                                }
                             }
-                            Spacer(modifier = Modifier
-                                .fillMaxWidth()
-                                .height(18.dp))
-                            Row(modifier = Modifier.fillMaxWidth()) {
-                                Button(modifier = Modifier
-                                    .width(182.dp)
-                                    .height(182.dp),
-                                    colors = ButtonDefaults.buttonColors(
-                                        backgroundColor = Color.Green
-                                    ),
-                                    onClick = {
-                                        selectedColors.add(Color.Green)
-                                        if (selectedColors == colorSequence.slice(0 until selectedColors.size)) {
-                                            if (selectedColors == colorSequence) {
-                                                level++
-                                            }
-                                        } else {
-                                            lost = true
-                                        }
-                                              },
-                                    enabled = !lost) {}
-                                Spacer(modifier = Modifier.width(18.dp))
-                                Button(modifier = Modifier
-                                    .width(182.dp)
-                                    .height(182.dp),
-                                    colors = ButtonDefaults.buttonColors(
-                                        backgroundColor = Color.Yellow
-                                    ),
-                                    onClick = {
-                                        selectedColors.add(Color.Yellow)
-                                        if (selectedColors == colorSequence.slice(0 until selectedColors.size)) {
-                                            if (selectedColors == colorSequence) {
-                                                level++
-                                            }
-                                        } else {
-                                            lost = true
-                                        }
-                                              },
-                                    enabled = !lost) {}
+                            if (lost) {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Button(onClick = {
+                                    lost = false
+                                    selectedColors.clear()
+                                    colorSequence.clear()
+                                    level = 0
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth(0.3f)
+                                    .align(Alignment.CenterHorizontally)) {
+                                    Text(text = "Restart")
+                                }
                             }
                         }
                         if (debugMode) {
