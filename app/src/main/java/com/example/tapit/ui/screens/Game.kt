@@ -12,39 +12,38 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.tapit.ui.navigation.Routes
+import com.example.tapit.ui.viewmodels.GameViewModel
 
-class GameScreenState(color: Color) {
-    val colorSequence = mutableListOf<Color>(color)
-    val selectedColors = mutableListOf<Color>()
-    var lost by mutableStateOf(false)
-    var level by mutableStateOf(0)
-
-}
-
-@Composable
-fun rememberGameState(color: Color): GameScreenState {
-    return remember { GameScreenState(color) }
-}
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun GameScreen(navController: NavController) {
-    val debugMode = false
-    val colorPalette = listOf(Color.Blue, Color.Red, Color.Green, Color.Yellow)
-    var randomColor = colorPalette.random()
-    val state = rememberGameState(randomColor)
+    val viewModel: GameViewModel = viewModel()
+    val state = viewModel.uiState
+    LaunchedEffect(true) {
+        viewModel.addSequenceColor()
+        viewModel.loadGameData()
+    }
+    if (state.loading) {
+        Text("loading...")
+        return
+    }
 
     // A surface container using the 'background' color from the theme
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colors.background
     ) {
-        if (!state.lost && state.level != 0) {
-            state.colorSequence.add(colorPalette.random())
-            state.selectedColors.clear()
+        LaunchedEffect(key1 = state.level) {
+            if (state.level != 0) {
+                viewModel.addSequenceColor()
+                viewModel.clearSelected()
+            }
         }
+
 
         Column(modifier = Modifier
             .fillMaxWidth()
@@ -64,23 +63,16 @@ fun GameScreen(navController: NavController) {
                 LazyVerticalGrid(
                     cells = GridCells.Fixed(2)
                 ) {
-                    items(colorPalette.size) {
+                    items(viewModel.colorPalette.size) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Button(modifier = Modifier
                                 .width(182.dp)
                                 .height(182.dp),
                                 colors = ButtonDefaults.buttonColors(
-                                    backgroundColor = colorPalette[it]
+                                    backgroundColor = viewModel.colorPalette[it]
                                 ),
                                 onClick = {
-                                    state.selectedColors.add(colorPalette[it])
-                                    if (state.selectedColors == state.colorSequence.slice(0 until state.selectedColors.size)) {
-                                        if (state.selectedColors == state.colorSequence) {
-                                            state.level++
-                                        }
-                                    } else {
-                                        state.lost = true
-                                    }
+                                    viewModel.tapIt(it)
                                 },
                                 enabled = !state.lost) {}
                             Spacer(modifier = Modifier.height(8.dp))
@@ -99,7 +91,7 @@ fun GameScreen(navController: NavController) {
                     }
                 }
             }
-            if (debugMode) {
+            if (viewModel.debugMode) {
                 Row {
                     Column {
                         Text(text = "target:")
